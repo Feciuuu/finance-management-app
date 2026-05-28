@@ -68,6 +68,9 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         setError(error.message ?? 'Cos poszlo nie tak')
         return
       }
+
+      router.push('/sign-up/success')
+      return
     } else {
       const isEmail = loginIdentifier.includes('@')
       
@@ -210,9 +213,19 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             )}
             
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Haslo
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Haslo
+                </Label>
+                {!isSignUp && (
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground"
+                  >
+                    Zapomniales hasla?
+                  </Link>
+                )}
+              </div>
               <Input
                 id="password"
                 type="password"
