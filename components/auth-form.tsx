@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { BarChart3, ArrowLeft, Loader2 } from 'lucide-react'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const router = useRouter()
@@ -38,7 +39,6 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     setLoading(true)
 
     if (isSignUp) {
-      // Check email availability
       const emailAvailable = await checkAvailability('email', email)
       if (!emailAvailable) {
         setError('Ten adres email jest juz zajety')
@@ -46,7 +46,6 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         return
       }
 
-      // Check username availability
       if (username) {
         const usernameAvailable = await checkAvailability('username', username)
         if (!usernameAvailable) {
@@ -70,7 +69,6 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         return
       }
     } else {
-      // Sign in - determine if identifier is email or username
       const isEmail = loginIdentifier.includes('@')
       
       const { error } = await authClient.signIn.email({
@@ -78,7 +76,6 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         password,
       })
 
-      // If login with username placeholder failed, try actual username lookup
       if (error && !isEmail) {
         try {
           const res = await fetch(`/api/get-email-by-username?username=${encodeURIComponent(loginIdentifier)}`)
@@ -119,112 +116,149 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   }
 
   return (
-    <main className="min-h-svh bg-background flex items-center justify-center px-4">
-      <Card className="w-full max-w-sm p-6 border-border">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {isSignUp ? 'Stworz konto' : 'Witaj ponownie'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isSignUp
-              ? 'Zarejestruj sie, aby rozpoczac'
-              : 'Zaloguj sie na swoje konto'}
-          </p>
-        </div>
+    <main className="min-h-svh bg-background flex flex-col">
+      {/* Back button */}
+      <div className="p-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Powrot
+          </Link>
+        </Button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {isSignUp && (
-            <>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Imie</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  autoComplete="name"
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="username">Nazwa uzytkownika</Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoComplete="username"
-                  placeholder="Opcjonalnie"
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="bg-background"
-                />
-              </div>
-            </>
-          )}
-          
-          {!isSignUp && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="loginIdentifier">Email lub nazwa uzytkownika</Label>
-              <Input
-                id="loginIdentifier"
-                value={loginIdentifier}
-                onChange={(e) => setLoginIdentifier(e.target.value)}
-                required
-                autoComplete="username"
-                className="bg-background"
-              />
+      <div className="flex flex-1 items-center justify-center px-4 pb-16">
+        <Card className="w-full max-w-sm border-border bg-card p-8">
+          {/* Logo */}
+          <div className="mb-8 flex flex-col items-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
+              <BarChart3 className="h-7 w-7 text-background" />
             </div>
-          )}
-          
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="password">Haslo</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
-              className="bg-background"
-            />
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+              {isSignUp ? 'Stworz konto' : 'Witaj ponownie'}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isSignUp
+                ? 'Zarejestruj sie, aby rozpoczac'
+                : 'Zaloguj sie na swoje konto'}
+            </p>
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {isSignUp && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Imie
+                  </Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    autoComplete="name"
+                    placeholder="Jan Kowalski"
+                    className="h-11 bg-input"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="username" className="text-sm font-medium">
+                    Nazwa uzytkownika
+                  </Label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    placeholder="jankowalski (opcjonalnie)"
+                    className="h-11 bg-input"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    placeholder="jan@przyklad.pl"
+                    className="h-11 bg-input"
+                  />
+                </div>
+              </>
+            )}
+            
+            {!isSignUp && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="loginIdentifier" className="text-sm font-medium">
+                  Email lub nazwa uzytkownika
+                </Label>
+                <Input
+                  id="loginIdentifier"
+                  value={loginIdentifier}
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
+                  required
+                  autoComplete="username"
+                  placeholder="jan@przyklad.pl lub jankowalski"
+                  className="h-11 bg-input"
+                />
+              </div>
+            )}
+            
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password" className="text-sm font-medium">
+                Haslo
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                placeholder="Minimum 8 znakow"
+                className="h-11 bg-input"
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                {error}
+              </div>
+            )}
+
+            <Button type="submit" disabled={loading} className="mt-2 h-11 w-full">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Prosze czekac...
+                </>
+              ) : isSignUp ? (
+                'Stworz konto'
+              ) : (
+                'Zaloguj sie'
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {isSignUp ? 'Masz juz konto? ' : 'Nie masz konta? '}
+              <Link
+                href={isSignUp ? '/sign-in' : '/sign-up'}
+                className="font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                {isSignUp ? 'Zaloguj sie' : 'Zarejestruj sie'}
+              </Link>
             </p>
-          )}
-
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading
-              ? 'Prosze czekac...'
-              : isSignUp
-                ? 'Stworz konto'
-                : 'Zaloguj sie'}
-          </Button>
-        </form>
-
-        <p className="text-sm text-muted-foreground text-center mt-6">
-          {isSignUp ? 'Masz juz konto? ' : 'Nie masz konta? '}
-          <Link
-            href={isSignUp ? '/sign-in' : '/sign-up'}
-            className="text-foreground font-medium underline-offset-4 hover:underline"
-          >
-            {isSignUp ? 'Zaloguj sie' : 'Zarejestruj sie'}
-          </Link>
-        </p>
-      </Card>
+          </div>
+        </Card>
+      </div>
     </main>
   )
 }
