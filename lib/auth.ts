@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
+import { sendPasswordResetEmail, sendWelcomeEmail } from '@/lib/email'
 
 const ADMIN_EMAIL = 'feciustream@gmail.com'
 
@@ -14,7 +15,10 @@ export const auth = betterAuth({
         : process.env.V0_RUNTIME_URL),
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true,
+    autoSignIn: false,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url)
+    },
   },
   trustedOrigins: [
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
@@ -62,6 +66,13 @@ export const auth = betterAuth({
               ...userData,
               isAdmin: userData.email === ADMIN_EMAIL,
             },
+          }
+        },
+        after: async (user) => {
+          try {
+            await sendWelcomeEmail(user.email, user.name)
+          } catch (e) {
+            console.error('[auth] Failed to send welcome email:', e)
           }
         },
       },
