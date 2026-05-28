@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
 
+const ADMIN_EMAIL = 'feciustream@gmail.com'
+
 export const auth = betterAuth({
   database: pool,
   baseURL:
@@ -48,6 +50,20 @@ export const auth = betterAuth({
         type: 'boolean',
         required: false,
         defaultValue: false,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (userData) => {
+          return {
+            data: {
+              ...userData,
+              isAdmin: userData.email === ADMIN_EMAIL,
+            },
+          }
+        },
       },
     },
   },
